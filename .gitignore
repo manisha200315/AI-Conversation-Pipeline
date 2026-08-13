@@ -1,0 +1,12 @@
+# Environment variables
+.env
+*.env
+
+# Dependencies
+node_modules/
+
+# Build files
+dist/
+
+# Logs
+*.log
