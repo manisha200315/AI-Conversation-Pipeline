@@ -65,74 +65,40 @@ function Chat() {
     );
   }, [conversations]);
 
-  // ==========================================
-  // CLEAN TEXT FOR SPEECH
-  // ==========================================
-
   const cleanTextForSpeech = (text) => {
     return text
-      // headings
       .replace(/^#{1,6}\s*/gm, "")
-
-      // bold
       .replace(/\*\*(.*?)\*\*/g, "$1")
-
-      // italic
       .replace(/\*(.*?)\*/g, "$1")
-
-      // underscores
       .replace(/__(.*?)__/g, "$1")
       .replace(/_(.*?)_/g, "$1")
-
-      // inline code
       .replace(/`([^`]+)`/g, "$1")
-
-      // code blocks
       .replace(/```[\s\S]*?```/g, "")
-
-      // links
       .replace(
         /\[([^\]]+)\]\([^)]+\)/g,
         "$1"
       )
-
-      // bullets
       .replace(
         /^\s*[-*+]\s+/gm,
         ""
       )
-
-      // numbered lists
       .replace(
         /^\s*\d+\.\s+/gm,
         ""
       )
-
-      // blockquotes
       .replace(
         /^\s*>\s+/gm,
         ""
       )
-
-      // horizontal lines
       .replace(
         /^\s*[-*_]{3,}\s*$/gm,
         ""
       )
-
-      // markdown symbols
       .replace(/[#*_~`]/g, "")
-
-      // extra spaces
       .replace(/\s+/g, " ")
 
       .trim();
   };
-
-  // ==========================================
-  // SPEECH QUEUE
-  // ==========================================
-
   const processSpeechQueue = () => {
     if (
       window.speechSynthesis.speaking
@@ -163,8 +129,6 @@ function Chat() {
       new SpeechSynthesisUtterance(
         cleanSentence
       );
-
-    // 1x speed
     utterance.rate = 1;
 
     utterance.pitch = 1;
@@ -188,11 +152,6 @@ function Chat() {
       utterance
     );
   };
-
-  // ==========================================
-  // ADD SENTENCE TO QUEUE
-  // ==========================================
-
   const speakSentence = (sentence) => {
     const cleanSentence =
       cleanTextForSpeech(sentence);
@@ -209,11 +168,6 @@ function Chat() {
 
     processSpeechQueue();
   };
-
-  // ==========================================
-  // STREAM → SPEECH
-  // ==========================================
-
   const processSpeechBuffer = (text) => {
     speechBuffer.current += text;
 
@@ -249,10 +203,6 @@ function Chat() {
     }
   };
 
-  // ==========================================
-  // FINISH SPEECH
-  // ==========================================
-
   const finishSpeech = () => {
     if (
       speechBuffer.current.trim()
@@ -267,10 +217,6 @@ function Chat() {
     processSpeechQueue();
   };
 
-  // ==========================================
-  // PAUSE
-  // ==========================================
-
   const pauseSpeaking = () => {
     if (
       window.speechSynthesis.speaking
@@ -280,11 +226,6 @@ function Chat() {
       setIsPaused(true);
     }
   };
-
-  // ==========================================
-  // RESUME
-  // ==========================================
-
   const resumeSpeaking = () => {
     if (
       window.speechSynthesis.paused
@@ -294,11 +235,6 @@ function Chat() {
       setIsPaused(false);
     }
   };
-
-  // ==========================================
-  // STOP
-  // ==========================================
-
   const stopSpeaking = () => {
     window.speechSynthesis.cancel();
 
@@ -310,11 +246,6 @@ function Chat() {
 
     setIsPaused(false);
   };
-
-  // ==========================================
-  // CREATE CONVERSATION
-  // ==========================================
-
   const createConversation = (
     firstMessage
   ) => {
@@ -345,11 +276,6 @@ function Chat() {
 
     return id;
   };
-
-  // ==========================================
-  // UPDATE HISTORY
-  // ==========================================
-
   const updateConversationHistory = (
     conversationId,
     newMessages
@@ -374,11 +300,6 @@ function Chat() {
         )
     );
   };
-
-  // ==========================================
-  // NEW CHAT
-  // ==========================================
-
   const newChat = () => {
     stopSpeaking();
 
@@ -388,11 +309,6 @@ function Chat() {
 
     setActiveConversationId(null);
   };
-
-  // ==========================================
-  // OPEN OLD CHAT
-  // ==========================================
-
   const openConversation = (
     conversation
   ) => {
@@ -408,11 +324,6 @@ function Chat() {
 
     setLoading(false);
   };
-
-  // ==========================================
-  // SEND MESSAGE
-  // ==========================================
-
   const sendMessage = async (
     userMessage
   ) => {
@@ -421,11 +332,7 @@ function Chat() {
     }
 
     setLoading(true);
-
-    // stop previous speech
     stopSpeaking();
-
-    // Create conversation if needed
     let conversationId =
       activeConversationId;
 
@@ -460,10 +367,6 @@ function Chat() {
     );
 
     try {
-      // ========================================
-      // BACKEND REQUEST
-      // ========================================
-
       const response = await fetch(
         "http://localhost:5000/api/chat",
         {
@@ -499,11 +402,6 @@ function Chat() {
         new TextDecoder();
 
       let buffer = "";
-
-      // ========================================
-      // READ STREAM
-      // ========================================
-
       while (true) {
         const {
           value,
@@ -559,11 +457,6 @@ function Chat() {
                 data.error
               );
             }
-
-            // ==================================
-            // STREAM TEXT
-            // ==================================
-
             if (data.text) {
               setMessages(
                 (previous) => {
@@ -588,8 +481,6 @@ function Chat() {
                       ].content +
                       data.text,
                   };
-
-                  // Save updated history
                   updateConversationHistory(
                     conversationId,
                     updated
@@ -598,8 +489,6 @@ function Chat() {
                   return updated;
                 }
               );
-
-              // send chunks to speech
               processSpeechBuffer(
                 data.text
               );
@@ -656,27 +545,18 @@ function Chat() {
       setLoading(false);
     }
   };
-
-  // ==========================================
-  // CLEANUP
-  // ==========================================
-
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
     };
   }, []);
 
-  // ==========================================
-  // UI
-  // ==========================================
-
   return (
     <div className="chat-page">
 
-      {/* ======================================
-          SIDEBAR
-      ====================================== */}
+      {
+
+      }
 
       <aside className="history-sidebar">
 
@@ -697,8 +577,6 @@ function Chat() {
           </div>
 
         </div>
-
-        {/* NEW CHAT */}
 
         <button
           className="new-chat-button"

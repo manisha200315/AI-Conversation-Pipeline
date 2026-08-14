@@ -13,15 +13,12 @@ const ai = new GoogleGenAI({
 
 app.use(cors());
 app.use(express.json());
-
-// Health check
 app.get("/", (req, res) => {
   res.json({
     message: "AI Conversation Pipeline backend is running!",
   });
 });
 
-// Streaming chat endpoint
 app.post("/api/chat", async (req, res) => {
   try {
     const { message } = req.body;
@@ -31,15 +28,12 @@ app.post("/api/chat", async (req, res) => {
         error: "Message is required",
       });
     }
-
-    // Tell the browser that this response will be streamed
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     res.flushHeaders();
 
     const response = await ai.models.generateContentStream({
-      // Keep the model that is already working for you
       model: "gemini-3-flash-preview",
 
       contents: message,
@@ -49,8 +43,6 @@ app.post("/api/chat", async (req, res) => {
           "You are a helpful conversational AI assistant. Give clear and concise answers.",
       },
     });
-
-    // Send each Gemini chunk to the client
     for await (const chunk of response) {
       const text = chunk.text;
 
@@ -58,8 +50,6 @@ app.post("/api/chat", async (req, res) => {
         res.write(`data: ${JSON.stringify({ text })}\n\n`);
       }
     }
-
-    // Tell the client that streaming is finished
     res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
 
     res.end();
